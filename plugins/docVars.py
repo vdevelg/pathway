@@ -8,25 +8,51 @@ import pyexcel
     https://support.microsoft.com/ru-ru/help/306281/how-to-store-and-retrieve-variables-in-word-documents
 """
 
+def counter(start=0, step=1, number=1):
+    """ Возвращает функцию-счётчик, которая, в свою очередь, 
+        возвращает значение счётчика, начиная со start, с шагом step, 
+        приращение значения происходит при количестве number вызовов функции-счётчика
+    """
+    i = 0 # Количество вызовов с последнего сброса (но это не точно)
+    count = start # Переменная счётчика
+    def incrementer():
+        nonlocal i, count, step, number
+        i += 1
+        if i > number:
+            i = 1
+            count += step
+        return count
+    return incrementer
+
 def keygen(path):
     """
-        Функция на основе одного абсолютного пути к файлу, в котором нужно изменить значение переменной, должна возвратить уникальный для данной группы файлов ключ.
-        К сожалению, нет общего алгоритма для реализации данной функции, поэтому для каждого проекта нужно править код этой функции.
+        Функция на основе одного абсолютного пути к файлу, в котором нужно изменить значение переменной, 
+        должна возвратить уникальный для данной группы файлов ключ.
+        К сожалению, нет общего алгоритма для реализации данной функции, 
+        поэтому для каждого проекта нужно править код этой функции.
     """
-    algorithm = 1 # можно выбрать алгоритм из уже реализованных
+    global call_num
+    algorithm = 0 # можно выбрать алгоритм из уже реализованных
+
     if   algorithm == 0:
+        key = call_num()
+    elif algorithm == 1:
         dir_name = os.path.split(os.path.dirname(path))[1] # имя директории в которой содержится файл назначения
         result = re.findall(r'\d+', dir_name) # список всех чисел в имени директории
         key = result[0] # выбор первого числа в качестве ключа
-    elif algorithm == 1:
+    elif algorithm == 2:
         file_name = os.path.split(path)[1] # полное имя файла с расширением имени
         short_file_name = file_name.split(".")[0] # разделение имени и расширения имени, выбор первой части
         key = short_file_name.split(" ")[0] # выбор части строки до первого пробела
     else:
         print("Неверно указан алгоритм для функции keygen, либо его не существует.")
+    key = str(key)
     return key
 
 def readDocVars(path):
+    """ 
+        Печатает и возвращает список переменных документа
+    """
     global Word
     doc = Word.Documents.Open(path) # открытие документа
     print("Документ содержит переменные:")
@@ -38,6 +64,9 @@ def readDocVars(path):
     return DocVariables
 
 def setDocVars(path, DocVariables):
+    """ 
+        Установка переменных документа
+    """
     global Word
     doc = Word.Documents.Open(path) # открытие документа
     print("Запись переменных:")
@@ -65,6 +94,9 @@ def setDocVars(path, DocVariables):
     doc.Close(0) # закрытие документа
 
 def delAllDocVars(path):
+    """
+        Удаление всех переменных документа
+    """
     global Word
     doc = Word.Documents.Open(path) # открытие документа
     for var in doc.Variables:
@@ -93,8 +125,12 @@ def read_docVars_data(file_name):
     return DocumentVariables, keys_name
 
 def docVars(ProcData):
-    global Word
+    """
+        Основная вызываемая функция
+    """
+    global Word, call_num
 
+    call_num = counter(start=1)
     Word = comtypes.client.CreateObject("Word.Application") # открытие приложения Word
     # Word.Visible = True # Отображение окна приложения
 
@@ -127,6 +163,9 @@ def docVars(ProcData):
     Word.Quit() # закрытие приложения
 
 def docVars_print(ProcData):
+    """
+        Тестовая функция
+    """
     print()
     print("Привет, меня зовут docVars")
     print("Мне передали аргументы:")
